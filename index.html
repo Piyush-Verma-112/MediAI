@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediAI — Smart Healthcare</title>
+
+    <!-- Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap"
+        rel="stylesheet">
+
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="css/auth.css">
+    <link rel="stylesheet" href="css/app.css">
+    <link rel="stylesheet" href="css/components.css">
+
+    <!-- Filter button style (shared by both portals) -->
+    <style>
+        .filter-row { display: flex; gap: 6px; flex-wrap: wrap; }
+        .filter-btn {
+            padding: 6px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: 20px;
+            background: var(--surface);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .filter-btn.active, .filter-btn:hover {
+            border-color: var(--teal);
+            color: var(--teal-dark);
+            background: var(--teal-light);
+        }
+        .btn-outline {
+            padding: 9px 18px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: transparent;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-outline:hover { border-color: var(--teal); color: var(--teal-dark); }
+        .btn-danger {
+            padding: 9px 18px;
+            border: none;
+            border-radius: var(--radius-sm);
+            background: var(--coral);
+            color: #fff;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .star-rating { display: flex; gap: 8px; justify-content: center; }
+        .star { font-size: 2rem; cursor: pointer; color: #ccc; transition: color 0.15s; }
+        .star:hover { color: var(--amber); }
+        .slots-hint { color: var(--text-hint); font-size: 13px; grid-column: 1/-1; }
+        .radio-group { display: flex; gap: 1rem; flex-wrap: wrap; }
+        .radio-opt { display: flex; align-items: center; gap: 6px; font-size: 14px; color: var(--text-muted); cursor: pointer; }
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            outline: none;
+            resize: vertical;
+            color: var(--text);
+            background: var(--surface);
+        }
+        textarea:focus { border-color: var(--teal); }
+        #toastContainer { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+    </style>
+</head>
+
+<body>
+
+    <!-- ════════════════════════════════════════
+         AUTH SCREEN
+    ════════════════════════════════════════ -->
+    <div id="authScreen">
+        <div class="auth-wrap">
+            <!-- Left Panel -->
+            <div class="auth-left">
+                <div class="auth-logo">
+                    <span class="auth-logo-dot"></span>MediAI
+                </div>
+                <div class="auth-tagline">
+                    <h2>Healthcare,<br><em>reimagined</em><br>with AI.</h2>
+                    <p>Find the right doctor instantly. Book appointments in seconds. Powered by intelligent scheduling.</p>
+                </div>
+                <div class="auth-features">
+                    <div class="auth-feat"><div class="auth-feat-icon">🤖</div>AI symptom-to-specialist matching</div>
+                    <div class="auth-feat"><div class="auth-feat-icon">📅</div>Real-time slot booking</div>
+                    <div class="auth-feat"><div class="auth-feat-icon">🔔</div>Smart reminders & no-show prediction</div>
+                    <div class="auth-feat"><div class="auth-feat-icon">🔒</div>Secure Supabase-backed accounts</div>
+                </div>
+            </div>
+
+            <!-- Right Panel -->
+            <div class="auth-right">
+                <div class="auth-box">
+                    <div class="auth-box-logo">
+                        <span></span>MediAI
+                    </div>
+
+                    <!-- Role Selector -->
+                    <div class="role-selector" id="roleSelector">
+                        <div class="role-btn active" id="rolePatient" onclick="setRole('patient')">
+                            <div class="role-icon">🧑</div>
+                            <div class="role-name">Patient</div>
+                            <div class="role-desc">Find & book doctors</div>
+                        </div>
+                        <div class="role-btn" id="roleDoctor" onclick="setRole('doctor')">
+                            <div class="role-icon">👨‍⚕️</div>
+                            <div class="role-name">Doctor</div>
+                            <div class="role-desc">Manage your schedule</div>
+                        </div>
+                    </div>
+
+                    <!-- Login / Signup Tabs -->
+                    <div class="auth-tabs">
+                        <button class="auth-tab active" id="tabLogin" onclick="switchTab('login')">Login</button>
+                        <button class="auth-tab" id="tabSignup" onclick="switchTab('signup')">Sign Up</button>
+                    </div>
+
+                    <div class="auth-error" id="authError"></div>
+                    <div class="auth-success" id="authSuccess"></div>
+
+                    <!-- Login Form -->
+                    <div id="loginForm">
+                        <div class="form-group">
+                            <label>Email Address</label>
+                            <input type="email" id="loginEmail" placeholder="you@example.com" />
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label>
+                            <div class="input-wrap">
+                                <input type="password" id="loginPassword" placeholder="Your password" />
+                                <button class="input-eye" onclick="togglePwd('loginPassword', this)">👁</button>
+                            </div>
+                        </div>
+                        <button class="submit-btn" id="loginBtn" onclick="handleLogin()">
+                            <span>Login to MediAI</span>
+                        </button>
+                    </div>
+
+                    <!-- Signup Form -->
+                    <div id="signupForm" style="display:none">
+                        <div class="form-group">
+                            <label>Full Name</label>
+                            <input type="text" id="signupName" placeholder="Your full name" oninput="validateName()" />
+                            <div class="field-error" id="errName">Name must be at least 3 characters, letters only.</div>
+                        </div>
+                        <div class="form-group">
+                            <label>Email Address</label>
+                            <input type="email" id="signupEmail" placeholder="you@example.com" oninput="validateEmail()" />
+                            <div class="field-error" id="errEmail">Please enter a valid email address.</div>
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label>
+                            <div class="input-wrap">
+                                <input type="password" id="signupPassword" placeholder="Min. 8 characters"
+                                    oninput="checkPwdStrength(this.value)" />
+                                <button class="input-eye" onclick="togglePwd('signupPassword', this)">👁</button>
+                            </div>
+                            <div class="pwd-strength" id="pwdStrength" style="display:none">
+                                <div class="pwd-bars">
+                                    <div class="pwd-bar" id="pb1"></div>
+                                    <div class="pwd-bar" id="pb2"></div>
+                                    <div class="pwd-bar" id="pb3"></div>
+                                    <div class="pwd-bar" id="pb4"></div>
+                                </div>
+                                <span class="pwd-label" id="pwdLabel"></span>
+                            </div>
+                            <div class="field-error" id="errPassword">Password must be 8+ chars with a number and special character.</div>
+                        </div>
+                        <div class="form-group">
+                            <label>Confirm Password</label>
+                            <div class="input-wrap">
+                                <input type="password" id="signupConfirmPassword" placeholder="Re-enter password"
+                                    oninput="checkConfirmPwd()" />
+                                <button class="input-eye" onclick="togglePwd('signupConfirmPassword', this)">👁</button>
+                            </div>
+                            <div class="field-error" id="errConfirmPassword">Passwords do not match.</div>
+                        </div>
+
+                        <!-- Doctor Extra Fields -->
+                        <div id="doctorExtra" style="display:none">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Specialty</label>
+                                    <select id="signupSpecialty">
+                                        <option value="">Select...</option>
+                                        <option>Cardiologist</option>
+                                        <option>Neurologist</option>
+                                        <option>Dermatologist</option>
+                                        <option>Orthopedist</option>
+                                        <option>Psychiatrist</option>
+                                        <option>Gastroenterologist</option>
+                                        <option>Pulmonologist</option>
+                                        <option>General Physician</option>
+                                        <option>ENT Specialist</option>
+                                        <option>Ophthalmologist</option>
+                                        <option>Pediatrician</option>
+                                        <option>Endocrinologist</option>
+                                    </select>
+                                    <div class="field-error" id="errSpecialty">Please select a specialty.</div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Experience (yrs)</label>
+                                    <input type="number" id="signupExp" placeholder="e.g. 8" min="0" max="60" />
+                                    <div class="field-error" id="errExp">Must be between 0 and 60 years.</div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Hospital / Clinic</label>
+                                <input type="text" id="signupHospital" placeholder="e.g. AIIMS New Delhi" />
+                                <div class="field-error" id="errHospital">Please enter your hospital or clinic name.</div>
+                            </div>
+                            <div class="form-group">
+                                <label>Consultation Fee (₹)</label>
+                                <input type="number" id="signupFee" placeholder="e.g. 500" min="100" max="50000" />
+                                <div class="field-error" id="errFee">Fee must be between ₹100 and ₹50,000.</div>
+                            </div>
+                            <div class="form-group">
+                                <label>Visit days</label>
+                                <p class="field-hint">Select the days you see patients at the clinic</p>
+                                <div class="signup-days" id="signupVisitDays">
+                                    <button type="button" class="signup-day-chip selected" data-day="Mon" onclick="toggleSignupDay(this)">Mon</button>
+                                    <button type="button" class="signup-day-chip selected" data-day="Tue" onclick="toggleSignupDay(this)">Tue</button>
+                                    <button type="button" class="signup-day-chip selected" data-day="Wed" onclick="toggleSignupDay(this)">Wed</button>
+                                    <button type="button" class="signup-day-chip selected" data-day="Thu" onclick="toggleSignupDay(this)">Thu</button>
+                                    <button type="button" class="signup-day-chip selected" data-day="Fri" onclick="toggleSignupDay(this)">Fri</button>
+                                    <button type="button" class="signup-day-chip" data-day="Sat" onclick="toggleSignupDay(this)">Sat</button>
+                                </div>
+                                <div class="field-error" id="errVisitDays">Please select at least one visit day.</div>
+                            </div>
+                        </div>
+
+                        <!-- Patient Extra Fields -->
+                        <div id="patientExtra">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Phone</label>
+                                    <input type="tel" id="signupPhone" placeholder="+91 XXXXX XXXXX" oninput="validatePhone()" />
+                                    <div class="field-error" id="errPhone">Enter a valid 10-digit Indian mobile number.</div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Age</label>
+                                    <input type="number" id="signupAge" placeholder="25" min="1" max="120" />
+                                    <div class="field-error" id="errAge">Age must be between 1 and 120.</div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>City</label>
+                                <input type="text" id="signupCity" placeholder="e.g. New Delhi" />
+                                <div class="field-error" id="errCity">Please enter your city.</div>
+                            </div>
+                        </div>
+
+                        <button class="submit-btn" id="signupBtn" onclick="handleSignup()">
+                            <span>Create Account</span>
+                        </button>
+                    </div>
+
+                    <div class="divider">or</div>
+                    <p style="text-align:center;font-size:13px;color:var(--text-hint)">
+                        By continuing you agree to our
+                        <a href="#" onclick="showTermsModal(); return false;" style="color:var(--teal-dark)">Terms of Service</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ════════════════════════════════════════
+         MAIN APP
+    ════════════════════════════════════════ -->
+    <div id="app">
+
+        <!-- Navigation -->
+        <nav>
+            <div class="nav-logo">
+                <span class="nav-logo-dot"></span>MediAI
+            </div>
+            <div class="nav-center" id="navTabs"></div>
+            <div class="nav-right">
+                <button type="button" class="nav-user" onclick="openProfilePage()" title="View profile">
+                    <div class="nav-avatar" id="navAvatar">?</div>
+                    <span id="navName"></span>
+                </button>
+                <button class="logout-btn" onclick="handleLogout()">Logout</button>
+            </div>
+        </nav>
+
+        <!-- ── PATIENT PAGES ────────────────────── -->
+
+        <!-- Page: Find Doctors -->
+        <div id="page-find" class="page">
+            <div class="hero">
+                <h1>Find the right doctor,<br><em>instantly.</em></h1>
+                <p>Describe your symptoms and let AI match you with the best specialists.</p>
+                <div class="search-wrap">
+                    <div class="search-icon-wrap">🔍</div>
+                    <input class="search-box" id="symptomInput" type="text"
+                        placeholder="e.g. chest pain, fever, joint pain..."
+                        onkeydown="if(event.key==='Enter') searchDoctors()" />
+                    <button class="search-btn" id="searchBtn" onclick="searchDoctors()">Search</button>
+                </div>
+                <div class="symptom-tags">
+                    <span class="stag" onclick="qs('headache and dizziness')">Headache</span>
+                    <span class="stag" onclick="qs('chest pain and shortness of breath')">Chest Pain</span>
+                    <span class="stag" onclick="qs('skin rash and itching')">Skin Rash</span>
+                    <span class="stag" onclick="qs('joint pain and swelling')">Joint Pain</span>
+                    <span class="stag" onclick="qs('anxiety and low mood')">Mental Health</span>
+                    <span class="stag" onclick="qs('stomach pain and nausea')">Stomach Issues</span>
+                    <span class="stag" onclick="qs('eye redness and blurry vision')">Eye Problems</span>
+                </div>
+            </div>
+            <div class="ai-insight" id="aiInsight">
+                <div class="ai-insight-icon">🤖</div>
+                <div id="aiInsightText"></div>
+            </div>
+            <div id="resultsSection" style="display:none">
+                <div class="results-header">
+                    <div class="results-title" id="resultsTitle"></div>
+                    <div class="ai-badge">✨ AI Matched</div>
+                </div>
+                <div class="doctors-grid" id="doctorsGrid"></div>
+            </div>
+        </div>
+
+        <!-- Page: My Appointments (Patient) -->
+        <div id="page-appointments" class="page">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem">
+                <div>
+                    <h2 style="font-family:'DM Serif Display',serif;font-size:1.8rem;color:var(--gray-dark)">My Appointments</h2>
+                    <p style="font-size:14px;color:var(--text-muted);margin-top:3px">Track and manage your bookings</p>
+                </div>
+                <div class="filter-row" id="apptFilterRow">
+                    <button class="filter-btn active" onclick="filterAppointments('all', this)">All</button>
+                    <button class="filter-btn" onclick="filterAppointments('upcoming', this)">Upcoming</button>
+                    <button class="filter-btn" onclick="filterAppointments('completed', this)">Completed</button>
+                    <button class="filter-btn" onclick="filterAppointments('cancelled', this)">Cancelled</button>
+                </div>
+            </div>
+            <div id="apptListWrap"></div>
+        </div>
+
+        <!-- ── DOCTOR PAGES ─────────────────────── -->
+
+        <!-- Page: Doctor Portal -->
+        <div id="page-portal" class="page">
+            <div class="portal-header">
+                <div>
+                    <h2 id="portalTitle">Doctor Portal</h2>
+                    <p id="portalSubtitle" style="font-size:14px;color:var(--text-muted);margin-top:3px"></p>
+                </div>
+                <div class="status-toggle-bar" id="statusPill">
+                    <span class="status-toggle-label" id="statusTxt">Available</span>
+                    <button type="button" class="toggle on" id="statusToggle" onclick="toggleStatus()"
+                        aria-label="Toggle available or offline for today">
+                        <span class="toggle-k"></span>
+                    </button>
+                </div>
+            </div>
+            <div class="doc-kpi">
+                <div class="kpi-card">
+                    <div class="kpi-val" id="kpiAppts">—</div>
+                    <div class="kpi-lbl">Appointments today</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-val" id="kpiAttendance">—</div>
+                    <div class="kpi-lbl">Attendance rate</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-val" id="kpiRating">—</div>
+                    <div class="kpi-lbl">Patient rating</div>
+                </div>
+            </div>
+            <div class="schedule-grid">
+                <div class="sched-card">
+                    <h3 id="schedDateTitle">Today's Schedule</h3>
+                    <div id="schedList"></div>
+                </div>
+                <div class="sched-card">
+                    <h3>Weekly Availability</h3>
+                    <div id="availList"></div>
+                    <button class="btn-outline" style="margin-top:1rem;width:100%" onclick="openAvailabilityEditor()">
+                        ✏️ Edit Availability
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page: Doctor — All Appointments -->
+        <div id="page-doc-appointments" class="page">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem">
+                <div>
+                    <h2 style="font-family:'DM Serif Display',serif;font-size:1.8rem;color:var(--gray-dark)">Patient Appointments</h2>
+                    <p style="font-size:14px;color:var(--text-muted);margin-top:3px">Review and manage all incoming bookings</p>
+                </div>
+                <div class="filter-row">
+                    <button class="filter-btn active" onclick="filterDocAppointments('all', this)">All</button>
+                    <button class="filter-btn" onclick="filterDocAppointments('upcoming', this)">Upcoming</button>
+                    <button class="filter-btn" onclick="filterDocAppointments('incomplete', this)">Incomplete</button>
+                    <button class="filter-btn" onclick="filterDocAppointments('completed', this)">Completed</button>
+                </div>
+            </div>
+            <div id="docApptListWrap"></div>
+        </div>
+
+        <!-- ── SHARED PAGES ────────────────────── -->
+
+        <!-- Page: Profile -->
+        <div id="page-profile" class="page">
+            <div id="profileContent"></div>
+        </div>
+
+        <!-- Page: Analytics Dashboard -->
+        <div id="page-dashboard" class="page">
+            <div class="dash-header">
+                <h2>AI Analytics Dashboard</h2>
+                <p>Live metrics from your scheduling system</p>
+            </div>
+            <div class="kpis">
+                <!-- Populated by renderDashboard() -->
+            </div>
+            <div class="charts">
+                <div class="chart-card">
+                    <h3>Appointments This Week</h3>
+                    <div class="bar-chart" id="barChart"></div>
+                </div>
+                <div class="chart-card">
+                    <h3>🤖 No-show Risk — Today</h3>
+                    <div class="risk-list" id="riskList"></div>
+                </div>
+            </div>
+            <div class="charts" style="margin-top:1.5rem">
+                <div class="chart-card">
+                    <h3>Specialty Distribution</h3>
+                    <div id="specialtyChart"></div>
+                </div>
+                <div class="chart-card">
+                    <h3>Peak Hours</h3>
+                    <div class="bar-chart" id="peakChart"></div>
+                </div>
+            </div>
+            <!-- No-show detail table injected by renderDashboard() -->
+        </div>
+
+    </div><!-- /#app -->
+
+
+    <!-- ════════════════════════════════════════
+         MODALS
+    ════════════════════════════════════════ -->
+
+    <!-- Booking Modal -->
+    <div class="modal-overlay" id="bookingModal" style="display:none"
+        onclick="closeModalOnOverlay(event,'bookingModal')">
+        <div class="modal">
+            <div class="modal-header">
+                <div>
+                    <h3 id="bookingDoctorName">Book Appointment</h3>
+                    <p id="bookingDoctorMeta" style="font-size:13px;color:var(--text-muted)"></p>
+                </div>
+                <button class="modal-close" onclick="closeModal('bookingModal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Select Date</label>
+                    <input type="date" id="bookingDate" onchange="loadSlots()" />
+                </div>
+                <div class="form-group">
+                    <label>Available Slots</label>
+                    <div class="slots-grid" id="slotsGrid">
+                        <p class="slots-hint">Pick a date to see available slots</p>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Reason for Visit</label>
+                    <textarea id="bookingReason" rows="3"
+                        placeholder="Briefly describe your symptoms or reason..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" onclick="closeModal('bookingModal')">Cancel</button>
+                <button class="submit-btn" id="confirmBookingBtn" onclick="confirmBooking()">
+                    <span>Confirm Booking</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Availability Editor Modal (Doctor) -->
+    <div class="modal-overlay" id="availabilityModal" style="display:none"
+        onclick="closeModalOnOverlay(event,'availabilityModal')">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <h3>Edit Weekly Availability</h3>
+                <button class="modal-close" onclick="closeModal('availabilityModal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size:13px;color:var(--text-muted);margin-bottom:1rem">
+                    Toggle days and set consultation hours for each working day.
+                </p>
+                <div id="availEditorGrid"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" onclick="closeModal('availabilityModal')">Cancel</button>
+                <button class="submit-btn" onclick="saveAvailability()"><span>Save Changes</span></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Terms of Service Modal -->
+    <div class="modal-overlay" id="termsModal" style="display:none" onclick="closeModalOnOverlay(event,'termsModal')">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <h3>Terms of Service</h3>
+                <button class="modal-close" onclick="closeModal('termsModal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size:14px;line-height:1.7;color:var(--text-muted)">
+                    <strong style="color:var(--gray-dark)">1. Acceptance</strong><br>
+                    By using MediAI, you agree to these terms.<br><br>
+                    <strong style="color:var(--gray-dark)">2. Medical Disclaimer</strong><br>
+                    MediAI is not a substitute for professional medical advice. Always consult a qualified healthcare provider.<br><br>
+                    <strong style="color:var(--gray-dark)">3. Data Privacy</strong><br>
+                    Your health data is encrypted and stored securely. We never sell your personal information.<br><br>
+                    <strong style="color:var(--gray-dark)">4. Appointments</strong><br>
+                    Cancellations must be made at least 2 hours in advance.<br><br>
+                    <strong style="color:var(--gray-dark)">5. User Responsibility</strong><br>
+                    You are responsible for providing accurate information during registration and booking.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button class="submit-btn" onclick="closeModal('termsModal')"><span>I Understand</span></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Cancel Appointment Modal -->
+    <div class="modal-overlay" id="cancelConfirmModal" style="display:none"
+        onclick="closeModalOnOverlay(event,'cancelConfirmModal')">
+        <div class="modal modal-sm">
+            <div class="modal-header">
+                <h3>Cancel Appointment?</h3>
+                <button class="modal-close" onclick="closeModal('cancelConfirmModal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size:14px;color:var(--text-muted)">
+                    Are you sure you want to cancel this appointment? This action cannot be undone.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" onclick="closeModal('cancelConfirmModal')">Keep It</button>
+                <button class="btn-danger" id="cancelConfirmBtn">Yes, Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rating Modal -->
+    <div class="modal-overlay" id="ratingModal" style="display:none" onclick="closeModalOnOverlay(event,'ratingModal')">
+        <div class="modal modal-sm">
+            <div class="modal-header">
+                <h3>Rate Your Visit</h3>
+                <button class="modal-close" onclick="closeModal('ratingModal')">✕</button>
+            </div>
+            <div class="modal-body" style="text-align:center">
+                <p id="ratingDoctorName" style="font-size:14px;color:var(--text-muted);margin-bottom:1rem"></p>
+                <div class="star-rating" id="starRating">
+                    <span class="star" onclick="setRating(1)">★</span>
+                    <span class="star" onclick="setRating(2)">★</span>
+                    <span class="star" onclick="setRating(3)">★</span>
+                    <span class="star" onclick="setRating(4)">★</span>
+                    <span class="star" onclick="setRating(5)">★</span>
+                </div>
+                <textarea id="ratingComment" rows="3" placeholder="Leave a comment (optional)..."
+                    style="margin-top:1rem"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" onclick="closeModal('ratingModal')">Skip</button>
+                <button class="submit-btn" onclick="submitRating()"><span>Submit Rating</span></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ════════════════════════════════════════
+         TOAST CONTAINER
+    ════════════════════════════════════════ -->
+    <div id="toastContainer"></div>
+
+
+    <!-- ════════════════════════════════════════
+         JS FILES — loaded in dependency order
+    ════════════════════════════════════════ -->
+
+    <!-- Supabase CDN — MUST be first -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/search.js"></script>
+    <script src="js/booking.js"></script>
+    <script src="js/doctor.js"></script>
+    <script src="js/patient.js"></script>
+    <script src="js/profile.js"></script>
+    <script src="js/dashboard.js"></script>
+
+</body>
+
+</html>

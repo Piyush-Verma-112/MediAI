@@ -1,0 +1,592 @@
+/* ═══════════════════════════════════
+   CSS VARIABLES
+═══════════════════════════════════ */
+:root {
+    --teal: #1D9E75;
+    --teal-light: #E1F5EE;
+    --teal-mid: #5DCAA5;
+    --teal-dark: #085041;
+    --coral: #D85A30;
+    --coral-light: #FAECE7;
+    --blue: #378ADD;
+    --blue-light: #E6F1FB;
+    --blue-dark: #185FA5;
+    --amber: #BA7517;
+    --amber-light: #FAEEDA;
+    --gray-light: #F1EFE8;
+    --gray-dark: #2C2C2A;
+    --text: #1a1a18;
+    --text-muted: #5F5E5A;
+    --text-hint: #888780;
+    --bg: #fdfcf8;
+    --surface: #ffffff;
+    --border: #e8e6df;
+    --radius: 14px;
+    --radius-sm: 9px;
+    --radius-pill: 50px;
+    --shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.06);
+    --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* ═══════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════ */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+}
+
+/* ═══════════════════════════════════
+   AUTH WRAPPER
+═══════════════════════════════════ */
+.auth-wrap {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+@media (max-width: 768px) {
+    .auth-wrap {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ═══════════════════════════════════
+   AUTH LEFT PANEL
+═══════════════════════════════════ */
+.auth-left {
+    background: var(--teal-dark);
+    padding: 3rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+}
+
+@media (max-width: 768px) {
+    .auth-left {
+        display: none;
+    }
+}
+
+.auth-left::before {
+    content: '';
+    position: absolute;
+    top: -80px;
+    right: -80px;
+    width: 320px;
+    height: 320px;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 50%;
+}
+
+.auth-left::after {
+    content: '';
+    position: absolute;
+    bottom: -60px;
+    left: -60px;
+    width: 240px;
+    height: 240px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 50%;
+}
+
+.auth-logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.8rem;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.auth-logo-dot {
+    width: 12px;
+    height: 12px;
+    background: var(--teal-mid);
+    border-radius: 50%;
+}
+
+.auth-tagline h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2.4rem;
+    color: #fff;
+    line-height: 1.2;
+    margin-bottom: 1rem;
+}
+
+.auth-tagline h2 em {
+    font-style: italic;
+    color: var(--teal-mid);
+}
+
+.auth-tagline p {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 15px;
+    line-height: 1.7;
+}
+
+.auth-features {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.auth-feat {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 14px;
+}
+
+.auth-feat-icon {
+    width: 34px;
+    height: 34px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════
+   AUTH RIGHT PANEL
+═══════════════════════════════════ */
+.auth-right {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    background: var(--bg);
+}
+
+.auth-box {
+    width: 100%;
+    max-width: 420px;
+}
+
+.auth-box-logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.5rem;
+    color: var(--teal-dark);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 2rem;
+}
+
+.auth-box-logo span {
+    width: 10px;
+    height: 10px;
+    background: var(--teal);
+    border-radius: 50%;
+    display: inline-block;
+}
+
+/* ═══════════════════════════════════
+   ROLE SELECTOR
+═══════════════════════════════════ */
+.role-selector {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 2rem;
+}
+
+.role-btn {
+    padding: 16px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.role-btn:hover {
+    border-color: var(--teal-mid);
+    background: var(--teal-light);
+}
+
+.role-btn.active {
+    border-color: var(--teal);
+    background: var(--teal-light);
+}
+
+.role-btn .role-icon {
+    font-size: 28px;
+}
+
+.role-btn .role-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--gray-dark);
+}
+
+.role-btn .role-desc {
+    font-size: 11px;
+    color: var(--text-hint);
+}
+
+/* ═══════════════════════════════════
+   AUTH TABS
+═══════════════════════════════════ */
+.auth-tabs {
+    display: flex;
+    background: var(--gray-light);
+    border-radius: var(--radius-pill);
+    padding: 4px;
+    margin-bottom: 1.75rem;
+}
+
+.auth-tab {
+    flex: 1;
+    padding: 9px;
+    border: none;
+    border-radius: var(--radius-pill);
+    background: transparent;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.auth-tab.active {
+    background: var(--surface);
+    color: var(--gray-dark);
+    box-shadow: var(--shadow-sm);
+}
+
+/* ═══════════════════════════════════
+   FORM GROUPS
+═══════════════════════════════════ */
+.form-group {
+    margin-bottom: 1.1rem;
+}
+
+.form-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 12px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    outline: none;
+    background: var(--surface);
+    color: var(--text);
+    transition: border 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    border-color: var(--teal);
+}
+
+.form-group input::placeholder {
+    color: var(--text-hint);
+}
+
+.input-wrap {
+    position: relative;
+}
+
+.input-wrap input {
+    padding-right: 44px;
+}
+
+.input-eye {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-hint);
+    font-size: 18px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.field-hint {
+    font-size: 12px;
+    color: var(--text-hint);
+    margin: 4px 0 8px;
+}
+
+.signup-days {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.signup-day-chip {
+    min-width: 44px;
+    padding: 8px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--text-muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.signup-day-chip:hover {
+    border-color: var(--teal);
+    color: var(--teal-dark);
+}
+
+.signup-day-chip.selected {
+    background: var(--teal-light);
+    border-color: var(--teal);
+    color: var(--teal-dark);
+}
+
+/* ═══════════════════════════════════
+   SUBMIT BUTTON
+═══════════════════════════════════ */
+.submit-btn {
+    width: 100%;
+    padding: 14px;
+    margin-top: 0.5rem;
+    background: var(--teal);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.submit-btn:hover {
+    background: var(--teal-dark);
+}
+
+.submit-btn:disabled {
+    background: var(--text-hint);
+    cursor: not-allowed;
+}
+
+.submit-btn .spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ═══════════════════════════════════
+   AUTH MESSAGES
+═══════════════════════════════════ */
+.auth-error {
+    background: var(--coral-light);
+    color: var(--coral);
+    font-size: 13px;
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 1rem;
+    display: none;
+    border-left: 3px solid var(--coral);
+}
+
+.auth-error.show {
+    display: block;
+}
+
+.auth-success {
+    background: var(--teal-light);
+    color: var(--teal-dark);
+    font-size: 13px;
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 1rem;
+    display: none;
+    border-left: 3px solid var(--teal);
+}
+
+.auth-success.show {
+    display: block;
+}
+
+/* ═══════════════════════════════════
+   DIVIDER
+═══════════════════════════════════ */
+.divider {
+    text-align: center;
+    color: var(--text-hint);
+    font-size: 13px;
+    margin: 1rem 0;
+    position: relative;
+}
+
+.divider::before,
+.divider::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 42%;
+    height: 1px;
+    background: var(--border);
+}
+
+.divider::before {
+    left: 0;
+}
+
+.divider::after {
+    right: 0;
+}
+
+/* ═══════════════════════════════════
+   SIGNUP EXTRA FIELDS
+═══════════════════════════════════ */
+.signup-extra {
+    display: none;
+}
+
+.signup-extra.show {
+    display: block;
+}
+
+/* ═══════════════════════════════════
+   PASSWORD STRENGTH
+═══════════════════════════════════ */
+.pwd-strength {
+    margin-top: 8px;
+}
+
+.pwd-bars {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 5px;
+}
+
+.pwd-bar {
+    flex: 1;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--border);
+    transition: background 0.3s;
+}
+
+.pwd-bar.weak {
+    background: var(--coral);
+}
+
+.pwd-bar.fair {
+    background: var(--amber);
+}
+
+.pwd-bar.good {
+    background: var(--blue);
+}
+
+.pwd-bar.strong {
+    background: var(--teal);
+}
+
+.pwd-label {
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.pwd-label.weak {
+    color: var(--coral);
+}
+
+.pwd-label.fair {
+    color: var(--amber);
+}
+
+.pwd-label.good {
+    color: var(--blue);
+}
+
+.pwd-label.strong {
+    color: var(--teal-dark);
+}
+
+/* ═══════════════════════════════════
+   FIELD ERROR
+═══════════════════════════════════ */
+.field-error {
+    font-size: 11px;
+    color: var(--coral);
+    margin-top: 5px;
+    display: none;
+}
+
+.field-error.show {
+    display: block;
+}
+
+.input-invalid {
+    border-color: var(--coral) !important;
+}
+
+.input-valid {
+    border-color: var(--teal) !important;
+}
+
+/* ═══════════════════════════════════
+BOOKING FORM VALIDATION
+═══════════════════════════════════ */
+.bk-field-error {
+    font-size: 11px;
+    color: var(--coral);
+    margin-top: 4px;
+    display: none;
+}
+
+.bk-field-error.show {
+    display: block;
+}
