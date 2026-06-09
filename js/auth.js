@@ -748,18 +748,12 @@ function showResetPasswordForm() {
 }
 
 async function submitNewPassword() {
-    // Session set karo pehle
-    const accessToken = new URLSearchParams(window.location.hash.replace('#', '')).get('access_token');
-    if (accessToken) {
-        await sb.auth.setSession({ access_token: accessToken, refresh_token: accessToken });
-    }
-    const pass = document.getElementById('resetPassword').value;
-    const confirm = document.getElementById('resetConfirmPassword').value;
-
     const errEl = document.getElementById('resetError');
     const sucEl = document.getElementById('resetSuccess');
-
     errEl.classList.remove('show');
+
+    const pass = document.getElementById('resetPassword').value;
+    const confirm = document.getElementById('resetConfirmPassword').value;
 
     if (pass.length < 8) {
         errEl.textContent = 'Password must be at least 8 characters.';
@@ -773,10 +767,35 @@ async function submitNewPassword() {
         return;
     }
 
-    const { error } = await sb.auth.updateUser({ password: pass }, {
-        accessToken: new URLSearchParams(window.location.hash.replace('#', '')).get('access_token')
+    // Get access token from URL
+    const hash = window.location.hash.replace('#', '');
+    const params = new URLSearchParams(hash);
+    const accessToken = params.get('access_token');
+
+    if (!accessToken) {
+        errEl.textContent = 'Reset link invalid. Please request a new one.';
+        errEl.classList.add('show');
+        return;
+    }
+
+    // Set session with token
+    const { data: sessionData, error: sessionError } = await sb.auth.setSession({
+        access_token: accessToken,
+        refresh_token: accessToken
     });
 
+    if (sessionError) {
+        // Try exchanging token directly
+        const { error: exchangeError } = await sb.auth.exchangeCodeForSession(accessToken);
+        if (exchangeError) {
+            errEl.textContent = 'Session expired. Please request a new reset link.';
+            errEl.classList.add('show');
+            return;
+        }
+    }
+
+    // Update password in Supabase
+    const { error } = await sb.auth.updateUser({ password: pass });
 
     if (error) {
         errEl.textContent = error.message;
@@ -786,6 +805,8 @@ async function submitNewPassword() {
 
     sucEl.textContent = '✅ Password updated! Redirecting to login...';
     sucEl.classList.add('show');
+
+    await sb.auth.signOut();
 
     setTimeout(() => {
         window.location.href = window.location.origin + window.location.pathname;
