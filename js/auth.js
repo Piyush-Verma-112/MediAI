@@ -362,11 +362,11 @@ async function handleLogin() {
 async function handleForgotPassword() {
     const email = document.getElementById('loginEmail').value.trim();
     if (!email) return showError('Please enter your email first.');
-    
+
     const { error } = await sb.auth.resetPasswordForEmail(email, {
         redirectTo: 'https://remarkable-frangollo-b60825.netlify.app'
     });
-    
+
     if (error) return showError(error.message);
     showSuccess('✅ Password reset link sent to your email!');
 }
@@ -393,10 +393,10 @@ async function onSignedIn(user) {
     currentUser = user;
 
     const { data: profileData } = await sb
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .maybeSingle();
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle();
 
     currentProfile = { ...(user.user_metadata || {}), ...(profileData || {}) };
     const role = currentProfile.role || 'patient';
@@ -636,7 +636,7 @@ async function filterAppointments(status, btn) {
     try {
         const { data: { session } } = await sb.auth.getSession();
         if (session) await onSignedIn(session.user);
-    } catch(e) {
+    } catch (e) {
         console.error('Init error:', e);
         document.getElementById('authScreen').style.display = '';
     }
@@ -690,15 +690,33 @@ async function quickLogin(email, password) {
 // Password Reset Detection
 (async () => {
     const hash = window.location.hash;
-    if (hash && hash.includes('type=recovery')) {
-        // Show reset password form
+    const params = new URLSearchParams(hash.replace('#', ''));
+    const type = params.get('type');
+    const accessToken = params.get('access_token');
+    const error = params.get('error');
+
+    if (error === 'access_denied') {
         document.getElementById('authScreen').style.display = '';
         document.getElementById('app').style.display = 'none';
-        
-        // Sign out current session first
         await sb.auth.signOut();
-        
+        showError('Reset link expired. Please request a new one.');
+        return;
+    }
+
+    if (type === 'recovery' && accessToken) {
+        document.getElementById('authScreen').style.display = '';
+        document.getElementById('app').style.display = 'none';
+        await sb.auth.signOut();
         showResetPasswordForm();
+        return;
+    }
+
+    try {
+        const { data: { session } } = await sb.auth.getSession();
+        if (session) await onSignedIn(session.user);
+    } catch (e) {
+        console.error('Init error:', e);
+        document.getElementById('authScreen').style.display = '';
     }
 })();
 
@@ -732,35 +750,35 @@ function showResetPasswordForm() {
 async function submitNewPassword() {
     const pass = document.getElementById('resetPassword').value;
     const confirm = document.getElementById('resetConfirmPassword').value;
-    
+
     const errEl = document.getElementById('resetError');
     const sucEl = document.getElementById('resetSuccess');
-    
+
     errEl.classList.remove('show');
-    
+
     if (pass.length < 8) {
         errEl.textContent = 'Password must be at least 8 characters.';
         errEl.classList.add('show');
         return;
     }
-    
+
     if (pass !== confirm) {
         errEl.textContent = 'Passwords do not match.';
         errEl.classList.add('show');
         return;
     }
-    
+
     const { error } = await sb.auth.updateUser({ password: pass });
-    
+
     if (error) {
         errEl.textContent = error.message;
         errEl.classList.add('show');
         return;
     }
-    
+
     sucEl.textContent = '✅ Password updated! Redirecting to login...';
     sucEl.classList.add('show');
-    
+
     setTimeout(() => {
         window.location.href = window.location.origin + window.location.pathname;
     }, 2000);
