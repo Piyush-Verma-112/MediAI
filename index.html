@@ -220,11 +220,12 @@
                         <button class="submit-btn" id="loginBtn" onclick="handleLogin()">
                             <span>Login to MediAI</span>
                         </button>
-                        <p style="text-align:right;margin-top:6px">
+                        <p style="text-align:right;margin-top:6px;font-size:13px">
                             <a href="#" onclick="handleForgotPassword();return false;"
-                                style="font-size:13px;color:var(--teal-dark)">
-                                Forgot password?
-                            </a>
+                                style="color:var(--teal-dark)">Forgot password?</a>
+                            <span style="color:var(--text-hint)"> · </span>
+                            <a href="#" onclick="resendConfirmationEmail();return false;"
+                                style="color:var(--teal-dark)">Resend confirmation</a>
                         </p>
                     </div>
 

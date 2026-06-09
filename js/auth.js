@@ -296,7 +296,10 @@ async function handleSignup() {
     const { data, error } = await sb.auth.signUp({
         email,
         password: pass,
-        options: { data: meta }
+        options: {
+            data: meta,
+            emailRedirectTo: getAuthRedirectUrl()
+        }
     });
 
     setBtnLoading('signupBtn', false);
@@ -330,7 +333,8 @@ async function handleSignup() {
     }
 
     if (data.user && !data.session) {
-        showSuccess('✅ Account created! Check your email to verify, then login.');
+        switchTab('login');
+        showSuccess(`✅ Account created! We sent a confirmation link to ${email}. Verify your email, then login.`);
     } else if (data.session) {
         await onSignedIn(data.session.user);
     }
@@ -354,9 +358,33 @@ async function handleLogin() {
 
     setBtnLoading('loginBtn', false);
 
-    if (error) return showError(error.message);
+    if (error) {
+        const msg = (error.message || '').toLowerCase();
+        if (msg.includes('email not confirmed') || msg.includes('not verified')) {
+            return showError('Please verify your email first. Check your inbox (and spam), then login again.');
+        }
+        return showError(error.message);
+    }
 
     await onSignedIn(data.user);
+}
+
+async function resendConfirmationEmail() {
+    clearAuthMsg();
+    const email = document.getElementById('loginEmail').value.trim();
+    if (!email) return showError('Enter your email above, then click resend.');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return showError('Please enter a valid email address.');
+    }
+
+    const { error } = await sb.auth.resend({
+        type: 'signup',
+        email,
+        options: { emailRedirectTo: getAuthRedirectUrl() }
+    });
+
+    if (error) return showError(error.message);
+    showSuccess('✅ Confirmation email sent again. Check your inbox.');
 }
 
 async function handleForgotPassword() {
@@ -393,14 +421,51 @@ async function handleLogout() {
 // ON SIGNED IN
 // ════════════════════════════════════
 
+async function ensureProfileFromMetadata(user) {
+    const { data: existing } = await sb
+        .from('profiles')
+        .select('id')
+        .eq('id', user.id)
+        .maybeSingle();
+
+    if (existing) return;
+
+    const m = user.user_metadata || {};
+    const role = m.role || 'patient';
+    const base = {
+        id: user.id,
+        email: user.email,
+        full_name: m.full_name,
+        role
+    };
+
+    const extra = role === 'doctor'
+        ? {
+            specialty: m.specialty,
+            experience: m.experience,
+            hospital: m.hospital,
+            fee: m.fee,
+            is_available: true
+        }
+        : { phone: m.phone, age: m.age, city: m.city };
+
+    await sb.from('profiles').upsert({ ...base, ...extra }, { onConflict: 'id' });
+
+    if (role === 'doctor' && Array.isArray(m.visit_days) && m.visit_days.length) {
+        await saveDoctorVisitDays(user.id, m.visit_days);
+    }
+}
+
 async function onSignedIn(user) {
     currentUser = user;
 
+    await ensureProfileFromMetadata(user);
+
     const { data: profileData } = await sb
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .maybeSingle();
+    .from('profiles')
+    .select('*')
+    .eq('id', user.id)
+    .maybeSingle();
 
     currentProfile = { ...(user.user_metadata || {}), ...(profileData || {}) };
     const role = currentProfile.role || 'patient';
@@ -644,7 +709,8 @@ function showAuthScreenForRecovery() {
 }
 
 function clearAuthHashFromUrl() {
-    if (window.location.hash || window.location.search.includes('type=recovery')) {
+    const search = window.location.search;
+    if (window.location.hash || search.includes('type=recovery') || search.includes('type=signup')) {
         history.replaceState(null, '', window.location.pathname);
     }
 }
@@ -660,10 +726,19 @@ async function initAuthOnLoad() {
         return;
     }
 
-    sb.auth.onAuthStateChange((event) => {
+    sb.auth.onAuthStateChange((event, session) => {
         if (event === 'PASSWORD_RECOVERY') {
             showAuthScreenForRecovery();
             showResetPasswordForm();
+            return;
+        }
+        if (event === 'SIGNED_IN' && session) {
+            const type = new URLSearchParams(window.location.hash.replace('#', '')).get('type')
+                || new URLSearchParams(window.location.search).get('type');
+            if (type === 'signup') {
+                showSuccess('✅ Email verified! Welcome to MediAI.');
+                clearAuthHashFromUrl();
+            }
         }
     });
 
@@ -680,6 +755,10 @@ async function initAuthOnLoad() {
     }
 
     if (session) {
+        if (hashType === 'signup' || queryType === 'signup') {
+            showSuccess('✅ Email verified! Welcome to MediAI.');
+            clearAuthHashFromUrl();
+        }
         await onSignedIn(session.user);
         return;
     }
