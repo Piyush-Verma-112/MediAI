@@ -11,6 +11,15 @@ const SUPABASE_URL = 'https://myskwxvqgtregvjjudjn.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_q0TcXZLlUvD-LMxy1FXh_A_KNys3F_f';
 const GROQ_KEY = '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';
 
+/** Live app URL — must match Supabase → Auth → URL Configuration */
+const APP_LIVE_URL = 'https://remarkable-frangollo-b60825.netlify.app';
+
+function getAuthRedirectUrl() {
+    const origin = window.location.origin.replace(/\/$/, '');
+    if (/localhost|127\.0\.0\.1/.test(origin)) return origin;
+    return APP_LIVE_URL;
+}
+
 // ═══════════════════════════════════
 // CONSTANTS
 // ════════════════════════════════════

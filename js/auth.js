@@ -360,15 +360,19 @@ async function handleLogin() {
 }
 
 async function handleForgotPassword() {
+    clearAuthMsg();
     const email = document.getElementById('loginEmail').value.trim();
     if (!email) return showError('Please enter your email first.');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return showError('Please enter a valid email address.');
+    }
 
     const { error } = await sb.auth.resetPasswordForEmail(email, {
-        redirectTo: 'https://remarkable-frangollo-b60825.netlify.app'
+        redirectTo: getAuthRedirectUrl()
     });
 
     if (error) return showError(error.message);
-    showSuccess('✅ Password reset link sent to your email!');
+    showSuccess('✅ Password reset link sent! Check your inbox (and spam).');
 }
 
 // ═══════════════════════════════════
@@ -628,34 +632,69 @@ async function filterAppointments(status, btn) {
 }
 
 // ═══════════════════════════════════
-// SESSION CHECK ON LOAD
+// AUTH INIT (session + password recovery)
 // ════════════════════════════════════
 
-(async () => {
-    if (!sb) return;
-    try {
-        const { data: { session } } = await sb.auth.getSession();
-        if (session) await onSignedIn(session.user);
-    } catch (e) {
-        console.error('Init error:', e);
-        document.getElementById('authScreen').style.display = '';
+let _passwordRecoveryMode = false;
+
+function showAuthScreenForRecovery() {
+    _passwordRecoveryMode = true;
+    document.getElementById('authScreen').style.display = '';
+    document.getElementById('app').classList.remove('show');
+}
+
+function clearAuthHashFromUrl() {
+    if (window.location.hash || window.location.search.includes('type=recovery')) {
+        history.replaceState(null, '', window.location.pathname);
     }
-})();
+}
+
+async function initAuthOnLoad() {
+    if (!sb) return;
+
+    const hashParams = new URLSearchParams(window.location.hash.replace('#', ''));
+    if (hashParams.get('error') === 'access_denied') {
+        showAuthScreenForRecovery();
+        showError('Reset link expired. Please request a new one.');
+        clearAuthHashFromUrl();
+        return;
+    }
+
+    sb.auth.onAuthStateChange((event) => {
+        if (event === 'PASSWORD_RECOVERY') {
+            showAuthScreenForRecovery();
+            showResetPasswordForm();
+        }
+    });
+
+    const hashType = hashParams.get('type');
+    const queryType = new URLSearchParams(window.location.search).get('type');
+    const isRecoveryLink = hashType === 'recovery' || queryType === 'recovery';
+
+    const { data: { session } } = await sb.auth.getSession();
+
+    if (isRecoveryLink || _passwordRecoveryMode) {
+        showAuthScreenForRecovery();
+        showResetPasswordForm();
+        return;
+    }
+
+    if (session) {
+        await onSignedIn(session.user);
+        return;
+    }
+
+    document.getElementById('authScreen').style.display = '';
+}
+
+initAuthOnLoad().catch(e => {
+    console.error('Init error:', e);
+    document.getElementById('authScreen').style.display = '';
+});
+
 // ═══════════════════════════════════
 // MISC AUTH UTILITIES
 // ════════════════════════════════════
-
-async function requestPasswordReset(email) {
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        showError('Please enter a valid email address.');
-        return;
-    }
-    const { error } = await sb.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin
-    });
-    if (error) { showError(error.message); return; }
-    showSuccess('Password reset link sent to your email!');
-}
 
 async function updateProfile(updates) {
     if (!currentUser) return;
@@ -686,38 +725,6 @@ async function quickLogin(email, password) {
     await onSignedIn(data.user);
     return { user: data.user, session: data.session };
 }
-
-// Password Reset Detection
-(async () => {
-    const hash = window.location.hash.replace('#', '');
-    const params = new URLSearchParams(hash);
-    const type = params.get('type');
-    const error = params.get('error');
-
-    if (error === 'access_denied') {
-        document.getElementById('authScreen').style.display = '';
-        document.getElementById('app').style.display = 'none';
-        showError('Reset link expired. Please request a new one.');
-        return;
-    }
-
-    // Check session — Supabase sets it automatically from ConfirmationURL
-    const { data: { session } } = await sb.auth.getSession();
-
-    if (session && type === 'recovery') {
-        document.getElementById('authScreen').style.display = '';
-        document.getElementById('app').style.display = 'none';
-        showResetPasswordForm();
-        return;
-    }
-
-    if (session) {
-        await onSignedIn(session.user);
-        return;
-    }
-
-    document.getElementById('authScreen').style.display = '';
-})();
 
 function showResetPasswordForm() {
     const authBox = document.querySelector('.auth-box');
@@ -766,20 +773,25 @@ async function submitNewPassword() {
         return;
     }
 
-    const hash = window.location.hash.replace('#', '');
-    const params = new URLSearchParams(hash);
-    const accessToken = params.get('access_token');
-    const refreshToken = params.get('refresh_token');
-
-    const { error: sessionError } = await sb.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken
-    });
-
-    if (sessionError) {
-        errEl.textContent = 'Link expired. Please request a new reset link.';
-        errEl.classList.add('show');
-        return;
+    const { data: { session: existing } } = await sb.auth.getSession();
+    if (!existing) {
+        const hashParams = new URLSearchParams(window.location.hash.replace('#', ''));
+        const accessToken = hashParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token');
+        if (!accessToken || !refreshToken) {
+            errEl.textContent = 'Link expired. Please request a new reset link.';
+            errEl.classList.add('show');
+            return;
+        }
+        const { error: sessionError } = await sb.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken
+        });
+        if (sessionError) {
+            errEl.textContent = 'Link expired. Please request a new reset link.';
+            errEl.classList.add('show');
+            return;
+        }
     }
 
     const { error } = await sb.auth.updateUser({ password: pass });
@@ -793,8 +805,10 @@ async function submitNewPassword() {
     sucEl.textContent = '✅ Password updated! Redirecting to login...';
     sucEl.classList.add('show');
 
+    _passwordRecoveryMode = false;
+    clearAuthHashFromUrl();
     await sb.auth.signOut();
     setTimeout(() => {
-        window.location.href = window.location.origin + window.location.pathname;
+        window.location.href = getAuthRedirectUrl() + window.location.pathname;
     }, 2000);
 }
