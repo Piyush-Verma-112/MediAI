@@ -770,14 +770,14 @@ async function submitNewPassword() {
     const hash = window.location.hash.replace('#', '');
     const params = new URLSearchParams(hash);
     const accessToken = params.get('access_token');
+    const refreshToken = params.get('refresh_token');
 
-    // Verify OTP token directly
-    const { error: verifyError } = await sb.auth.verifyOtp({
-        token_hash: accessToken,
-        type: 'recovery'
+    const { error: sessionError } = await sb.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken
     });
 
-    if (verifyError) {
+    if (sessionError) {
         errEl.textContent = 'Link expired. Please request a new reset link.';
         errEl.classList.add('show');
         return;
