@@ -767,34 +767,22 @@ async function submitNewPassword() {
         return;
     }
 
-    // Get access token from URL
     const hash = window.location.hash.replace('#', '');
     const params = new URLSearchParams(hash);
     const accessToken = params.get('access_token');
 
-    if (!accessToken) {
-        errEl.textContent = 'Reset link invalid. Please request a new one.';
+    // Verify OTP token directly
+    const { error: verifyError } = await sb.auth.verifyOtp({
+        token_hash: accessToken,
+        type: 'recovery'
+    });
+
+    if (verifyError) {
+        errEl.textContent = 'Link expired. Please request a new reset link.';
         errEl.classList.add('show');
         return;
     }
 
-    // Set session with token
-    const { data: sessionData, error: sessionError } = await sb.auth.setSession({
-        access_token: accessToken,
-        refresh_token: accessToken
-    });
-
-    if (sessionError) {
-        // Try exchanging token directly
-        const { error: exchangeError } = await sb.auth.exchangeCodeForSession(accessToken);
-        if (exchangeError) {
-            errEl.textContent = 'Session expired. Please request a new reset link.';
-            errEl.classList.add('show');
-            return;
-        }
-    }
-
-    // Update password in Supabase
     const { error } = await sb.auth.updateUser({ password: pass });
 
     if (error) {
@@ -807,7 +795,6 @@ async function submitNewPassword() {
     sucEl.classList.add('show');
 
     await sb.auth.signOut();
-
     setTimeout(() => {
         window.location.href = window.location.origin + window.location.pathname;
     }, 2000);
