@@ -748,6 +748,11 @@ function showResetPasswordForm() {
 }
 
 async function submitNewPassword() {
+    // Session set karo pehle
+    const accessToken = new URLSearchParams(window.location.hash.replace('#', '')).get('access_token');
+    if (accessToken) {
+        await sb.auth.setSession({ access_token: accessToken, refresh_token: accessToken });
+    }
     const pass = document.getElementById('resetPassword').value;
     const confirm = document.getElementById('resetConfirmPassword').value;
 
@@ -768,7 +773,10 @@ async function submitNewPassword() {
         return;
     }
 
-    const { error } = await sb.auth.updateUser({ password: pass });
+    const { error } = await sb.auth.updateUser({ password: pass }, {
+        accessToken: new URLSearchParams(window.location.hash.replace('#', '')).get('access_token')
+    });
+
 
     if (error) {
         errEl.textContent = error.message;
