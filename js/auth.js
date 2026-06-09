@@ -235,6 +235,18 @@ async function handleSignup() {
 
     setBtnLoading('signupBtn', true);
 
+    const { data: existingByEmail } = await sb
+        .from('profiles')
+        .select('id')
+        .ilike('email', email)
+        .maybeSingle();
+
+    if (existingByEmail) {
+        setBtnLoading('signupBtn', false);
+        switchTab('login');
+        return showError('This email is already registered. Please login instead.');
+    }
+
     const meta = { full_name: name, role: currentRole };
 
     if (currentRole === 'doctor') {
@@ -304,7 +316,22 @@ async function handleSignup() {
 
     setBtnLoading('signupBtn', false);
 
-    if (error) return showError(error.message);
+    if (error) {
+        const msg = (error.message || '').toLowerCase();
+        if (msg.includes('already') || msg.includes('registered') || msg.includes('exists')) {
+            switchTab('login');
+            return showError('This email is already registered. Please login instead.');
+        }
+        return showError(error.message);
+    }
+
+    // Email confirmation ON: duplicate email returns user with empty identities (no new account)
+    if (data.user && data.user.identities && data.user.identities.length === 0) {
+        switchTab('login');
+        return showError(
+            'This email is already registered. Please login, or use "Resend confirmation" if you never verified.'
+        );
+    }
 
     if (data.user) {
         await new Promise(r => setTimeout(r, 1000));
