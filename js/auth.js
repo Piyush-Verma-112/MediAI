@@ -686,3 +686,82 @@ async function quickLogin(email, password) {
     await onSignedIn(data.user);
     return { user: data.user, session: data.session };
 }
+
+// Password Reset Detection
+(async () => {
+    const hash = window.location.hash;
+    if (hash && hash.includes('type=recovery')) {
+        // Show reset password form
+        document.getElementById('authScreen').style.display = '';
+        document.getElementById('app').style.display = 'none';
+        
+        // Sign out current session first
+        await sb.auth.signOut();
+        
+        showResetPasswordForm();
+    }
+})();
+
+function showResetPasswordForm() {
+    const authBox = document.querySelector('.auth-box');
+    authBox.innerHTML = `
+        <div class="auth-box-logo"><span></span>MediAI</div>
+        <h3 style="margin-bottom:1.5rem;color:var(--gray-dark)">Set New Password</h3>
+        <div class="auth-error" id="resetError"></div>
+        <div class="auth-success" id="resetSuccess"></div>
+        <div class="form-group">
+            <label>New Password</label>
+            <div class="input-wrap">
+                <input type="password" id="resetPassword" placeholder="Min. 8 characters" />
+                <button class="input-eye" onclick="togglePwd('resetPassword', this)">👁</button>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Confirm Password</label>
+            <div class="input-wrap">
+                <input type="password" id="resetConfirmPassword" placeholder="Re-enter password" />
+                <button class="input-eye" onclick="togglePwd('resetConfirmPassword', this)">👁</button>
+            </div>
+        </div>
+        <button class="submit-btn" onclick="submitNewPassword()">
+            <span>Update Password</span>
+        </button>
+    `;
+}
+
+async function submitNewPassword() {
+    const pass = document.getElementById('resetPassword').value;
+    const confirm = document.getElementById('resetConfirmPassword').value;
+    
+    const errEl = document.getElementById('resetError');
+    const sucEl = document.getElementById('resetSuccess');
+    
+    errEl.classList.remove('show');
+    
+    if (pass.length < 8) {
+        errEl.textContent = 'Password must be at least 8 characters.';
+        errEl.classList.add('show');
+        return;
+    }
+    
+    if (pass !== confirm) {
+        errEl.textContent = 'Passwords do not match.';
+        errEl.classList.add('show');
+        return;
+    }
+    
+    const { error } = await sb.auth.updateUser({ password: pass });
+    
+    if (error) {
+        errEl.textContent = error.message;
+        errEl.classList.add('show');
+        return;
+    }
+    
+    sucEl.textContent = '✅ Password updated! Redirecting to login...';
+    sucEl.classList.add('show');
+    
+    setTimeout(() => {
+        window.location.href = window.location.origin + window.location.pathname;
+    }, 2000);
+}
