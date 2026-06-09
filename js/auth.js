@@ -689,35 +689,34 @@ async function quickLogin(email, password) {
 
 // Password Reset Detection
 (async () => {
-    const hash = window.location.hash;
-    const params = new URLSearchParams(hash.replace('#', ''));
+    const hash = window.location.hash.replace('#', '');
+    const params = new URLSearchParams(hash);
     const type = params.get('type');
-    const accessToken = params.get('access_token');
     const error = params.get('error');
 
     if (error === 'access_denied') {
         document.getElementById('authScreen').style.display = '';
         document.getElementById('app').style.display = 'none';
-        await sb.auth.signOut();
         showError('Reset link expired. Please request a new one.');
         return;
     }
 
-    if (type === 'recovery' && accessToken) {
+    // Check session — Supabase sets it automatically from ConfirmationURL
+    const { data: { session } } = await sb.auth.getSession();
+
+    if (session && type === 'recovery') {
         document.getElementById('authScreen').style.display = '';
         document.getElementById('app').style.display = 'none';
-        await sb.auth.signOut();
         showResetPasswordForm();
         return;
     }
 
-    try {
-        const { data: { session } } = await sb.auth.getSession();
-        if (session) await onSignedIn(session.user);
-    } catch (e) {
-        console.error('Init error:', e);
-        document.getElementById('authScreen').style.display = '';
+    if (session) {
+        await onSignedIn(session.user);
+        return;
     }
+
+    document.getElementById('authScreen').style.display = '';
 })();
 
 function showResetPasswordForm() {
