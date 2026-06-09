@@ -18,7 +18,12 @@
 
     <!-- Filter button style (shared by both portals) -->
     <style>
-        .filter-row { display: flex; gap: 6px; flex-wrap: wrap; }
+        .filter-row {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
         .filter-btn {
             padding: 6px 14px;
             border: 1.5px solid var(--border);
@@ -31,11 +36,14 @@
             cursor: pointer;
             transition: all 0.2s;
         }
-        .filter-btn.active, .filter-btn:hover {
+
+        .filter-btn.active,
+        .filter-btn:hover {
             border-color: var(--teal);
             color: var(--teal-dark);
             background: var(--teal-light);
         }
+
         .btn-outline {
             padding: 9px 18px;
             border: 1.5px solid var(--border);
@@ -48,7 +56,12 @@
             cursor: pointer;
             transition: all 0.2s;
         }
-        .btn-outline:hover { border-color: var(--teal); color: var(--teal-dark); }
+
+        .btn-outline:hover {
+            border-color: var(--teal);
+            color: var(--teal-dark);
+        }
+
         .btn-danger {
             padding: 9px 18px;
             border: none;
@@ -60,12 +73,45 @@
             font-weight: 600;
             cursor: pointer;
         }
-        .star-rating { display: flex; gap: 8px; justify-content: center; }
-        .star { font-size: 2rem; cursor: pointer; color: #ccc; transition: color 0.15s; }
-        .star:hover { color: var(--amber); }
-        .slots-hint { color: var(--text-hint); font-size: 13px; grid-column: 1/-1; }
-        .radio-group { display: flex; gap: 1rem; flex-wrap: wrap; }
-        .radio-opt { display: flex; align-items: center; gap: 6px; font-size: 14px; color: var(--text-muted); cursor: pointer; }
+
+        .star-rating {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .star {
+            font-size: 2rem;
+            cursor: pointer;
+            color: #ccc;
+            transition: color 0.15s;
+        }
+
+        .star:hover {
+            color: var(--amber);
+        }
+
+        .slots-hint {
+            color: var(--text-hint);
+            font-size: 13px;
+            grid-column: 1/-1;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .radio-opt {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
         textarea {
             width: 100%;
             padding: 12px;
@@ -78,8 +124,20 @@
             color: var(--text);
             background: var(--surface);
         }
-        textarea:focus { border-color: var(--teal); }
-        #toastContainer { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+
+        textarea:focus {
+            border-color: var(--teal);
+        }
+
+        #toastContainer {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
     </style>
 </head>
 
@@ -97,13 +155,22 @@
                 </div>
                 <div class="auth-tagline">
                     <h2>Healthcare,<br><em>reimagined</em><br>with AI.</h2>
-                    <p>Find the right doctor instantly. Book appointments in seconds. Powered by intelligent scheduling.</p>
+                    <p>Find the right doctor instantly. Book appointments in seconds. Powered by intelligent scheduling.
+                    </p>
                 </div>
                 <div class="auth-features">
-                    <div class="auth-feat"><div class="auth-feat-icon">🤖</div>AI symptom-to-specialist matching</div>
-                    <div class="auth-feat"><div class="auth-feat-icon">📅</div>Real-time slot booking</div>
-                    <div class="auth-feat"><div class="auth-feat-icon">🔔</div>Smart reminders & no-show prediction</div>
-                    <div class="auth-feat"><div class="auth-feat-icon">🔒</div>Secure Supabase-backed accounts</div>
+                    <div class="auth-feat">
+                        <div class="auth-feat-icon">🤖</div>AI symptom-to-specialist matching
+                    </div>
+                    <div class="auth-feat">
+                        <div class="auth-feat-icon">📅</div>Real-time slot booking
+                    </div>
+                    <div class="auth-feat">
+                        <div class="auth-feat-icon">🔔</div>Smart reminders & no-show prediction
+                    </div>
+                    <div class="auth-feat">
+                        <div class="auth-feat-icon">🔒</div>Secure Supabase-backed accounts
+                    </div>
                 </div>
             </div>
 
@@ -153,6 +220,12 @@
                         <button class="submit-btn" id="loginBtn" onclick="handleLogin()">
                             <span>Login to MediAI</span>
                         </button>
+                        <p style="text-align:right;margin-top:6px">
+                            <a href="#" onclick="handleForgotPassword();return false;"
+                                style="font-size:13px;color:var(--teal-dark)">
+                                Forgot password?
+                            </a>
+                        </p>
                     </div>
 
                     <!-- Signup Form -->
@@ -160,11 +233,13 @@
                         <div class="form-group">
                             <label>Full Name</label>
                             <input type="text" id="signupName" placeholder="Your full name" oninput="validateName()" />
-                            <div class="field-error" id="errName">Name must be at least 3 characters, letters only.</div>
+                            <div class="field-error" id="errName">Name must be at least 3 characters, letters only.
+                            </div>
                         </div>
                         <div class="form-group">
                             <label>Email Address</label>
-                            <input type="email" id="signupEmail" placeholder="you@example.com" oninput="validateEmail()" />
+                            <input type="email" id="signupEmail" placeholder="you@example.com"
+                                oninput="validateEmail()" />
                             <div class="field-error" id="errEmail">Please enter a valid email address.</div>
                         </div>
                         <div class="form-group">
@@ -183,7 +258,8 @@
                                 </div>
                                 <span class="pwd-label" id="pwdLabel"></span>
                             </div>
-                            <div class="field-error" id="errPassword">Password must be 8+ chars with a number and special character.</div>
+                            <div class="field-error" id="errPassword">Password must be 8+ chars with a number and
+                                special character.</div>
                         </div>
                         <div class="form-group">
                             <label>Confirm Password</label>
@@ -226,7 +302,8 @@
                             <div class="form-group">
                                 <label>Hospital / Clinic</label>
                                 <input type="text" id="signupHospital" placeholder="e.g. AIIMS New Delhi" />
-                                <div class="field-error" id="errHospital">Please enter your hospital or clinic name.</div>
+                                <div class="field-error" id="errHospital">Please enter your hospital or clinic name.
+                                </div>
                             </div>
                             <div class="form-group">
                                 <label>Consultation Fee (₹)</label>
@@ -237,12 +314,18 @@
                                 <label>Visit days</label>
                                 <p class="field-hint">Select the days you see patients at the clinic</p>
                                 <div class="signup-days" id="signupVisitDays">
-                                    <button type="button" class="signup-day-chip selected" data-day="Mon" onclick="toggleSignupDay(this)">Mon</button>
-                                    <button type="button" class="signup-day-chip selected" data-day="Tue" onclick="toggleSignupDay(this)">Tue</button>
-                                    <button type="button" class="signup-day-chip selected" data-day="Wed" onclick="toggleSignupDay(this)">Wed</button>
-                                    <button type="button" class="signup-day-chip selected" data-day="Thu" onclick="toggleSignupDay(this)">Thu</button>
-                                    <button type="button" class="signup-day-chip selected" data-day="Fri" onclick="toggleSignupDay(this)">Fri</button>
-                                    <button type="button" class="signup-day-chip" data-day="Sat" onclick="toggleSignupDay(this)">Sat</button>
+                                    <button type="button" class="signup-day-chip selected" data-day="Mon"
+                                        onclick="toggleSignupDay(this)">Mon</button>
+                                    <button type="button" class="signup-day-chip selected" data-day="Tue"
+                                        onclick="toggleSignupDay(this)">Tue</button>
+                                    <button type="button" class="signup-day-chip selected" data-day="Wed"
+                                        onclick="toggleSignupDay(this)">Wed</button>
+                                    <button type="button" class="signup-day-chip selected" data-day="Thu"
+                                        onclick="toggleSignupDay(this)">Thu</button>
+                                    <button type="button" class="signup-day-chip selected" data-day="Fri"
+                                        onclick="toggleSignupDay(this)">Fri</button>
+                                    <button type="button" class="signup-day-chip" data-day="Sat"
+                                        onclick="toggleSignupDay(this)">Sat</button>
                                 </div>
                                 <div class="field-error" id="errVisitDays">Please select at least one visit day.</div>
                             </div>
@@ -253,8 +336,10 @@
                             <div class="form-row">
                                 <div class="form-group">
                                     <label>Phone</label>
-                                    <input type="tel" id="signupPhone" placeholder="+91 XXXXX XXXXX" oninput="validatePhone()" />
-                                    <div class="field-error" id="errPhone">Enter a valid 10-digit Indian mobile number.</div>
+                                    <input type="tel" id="signupPhone" placeholder="+91 XXXXX XXXXX"
+                                        oninput="validatePhone()" />
+                                    <div class="field-error" id="errPhone">Enter a valid 10-digit Indian mobile number.
+                                    </div>
                                 </div>
                                 <div class="form-group">
                                     <label>Age</label>
@@ -277,7 +362,8 @@
                     <div class="divider">or</div>
                     <p style="text-align:center;font-size:13px;color:var(--text-hint)">
                         By continuing you agree to our
-                        <a href="#" onclick="showTermsModal(); return false;" style="color:var(--teal-dark)">Terms of Service</a>
+                        <a href="#" onclick="showTermsModal(); return false;" style="color:var(--teal-dark)">Terms of
+                            Service</a>
                     </p>
                 </div>
             </div>
@@ -343,9 +429,11 @@
 
         <!-- Page: My Appointments (Patient) -->
         <div id="page-appointments" class="page">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem">
+            <div
+                style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem">
                 <div>
-                    <h2 style="font-family:'DM Serif Display',serif;font-size:1.8rem;color:var(--gray-dark)">My Appointments</h2>
+                    <h2 style="font-family:'DM Serif Display',serif;font-size:1.8rem;color:var(--gray-dark)">My
+                        Appointments</h2>
                     <p style="font-size:14px;color:var(--text-muted);margin-top:3px">Track and manage your bookings</p>
                 </div>
                 <div class="filter-row" id="apptFilterRow">
@@ -406,10 +494,13 @@
 
         <!-- Page: Doctor — All Appointments -->
         <div id="page-doc-appointments" class="page">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem">
+            <div
+                style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem">
                 <div>
-                    <h2 style="font-family:'DM Serif Display',serif;font-size:1.8rem;color:var(--gray-dark)">Patient Appointments</h2>
-                    <p style="font-size:14px;color:var(--text-muted);margin-top:3px">Review and manage all incoming bookings</p>
+                    <h2 style="font-family:'DM Serif Display',serif;font-size:1.8rem;color:var(--gray-dark)">Patient
+                        Appointments</h2>
+                    <p style="font-size:14px;color:var(--text-muted);margin-top:3px">Review and manage all incoming
+                        bookings</p>
                 </div>
                 <div class="filter-row">
                     <button class="filter-btn active" onclick="filterDocAppointments('all', this)">All</button>
@@ -537,7 +628,8 @@
                     <strong style="color:var(--gray-dark)">1. Acceptance</strong><br>
                     By using MediAI, you agree to these terms.<br><br>
                     <strong style="color:var(--gray-dark)">2. Medical Disclaimer</strong><br>
-                    MediAI is not a substitute for professional medical advice. Always consult a qualified healthcare provider.<br><br>
+                    MediAI is not a substitute for professional medical advice. Always consult a qualified healthcare
+                    provider.<br><br>
                     <strong style="color:var(--gray-dark)">3. Data Privacy</strong><br>
                     Your health data is encrypted and stored securely. We never sell your personal information.<br><br>
                     <strong style="color:var(--gray-dark)">4. Appointments</strong><br>

@@ -359,6 +359,18 @@ async function handleLogin() {
     await onSignedIn(data.user);
 }
 
+async function handleForgotPassword() {
+    const email = document.getElementById('loginEmail').value.trim();
+    if (!email) return showError('Please enter your email first.');
+    
+    const { error } = await sb.auth.resetPasswordForEmail(email, {
+        redirectTo: 'https://remarkable-frangollo-b60825.netlify.app'
+    });
+    
+    if (error) return showError(error.message);
+    showSuccess('✅ Password reset link sent to your email!');
+}
+
 // ═══════════════════════════════════
 // LOGOUT
 // ════════════════════════════════════
